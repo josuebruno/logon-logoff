@@ -43,6 +43,21 @@ foreach ($xmlData->Registro as $log) {
         ];
     }
 }
+
+// Paginação
+$limit = 30; // Limite de resultados por página
+$totalResults = count($filteredLogs); // Total de registros encontrados
+$totalPages = ceil($totalResults / $limit); // Número total de páginas
+$currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1; // Página atual, padrão 1
+$startIndex = ($currentPage - 1) * $limit; // Índice do primeiro resultado da página atual
+
+// Pega apenas os registros para a página atual
+$logsToDisplay = array_slice($filteredLogs, $startIndex, $limit);
+
+// Definir a faixa de números de página a ser exibida
+$visiblePages = 3;
+$startPage = max(1, $currentPage - floor($visiblePages / 2));
+$endPage = min($totalPages, $startPage + $visiblePages - 1);
 ?>
 
 <!DOCTYPE html>
@@ -76,6 +91,14 @@ foreach ($xmlData->Registro as $log) {
         .no-results {
             text-align: center;
             color: #888;
+        }
+
+        .pagination {
+            justify-content: center;
+        }
+
+        .page-item.disabled .page-link {
+            pointer-events: none;
         }
     </style>
 </head>
@@ -117,7 +140,7 @@ foreach ($xmlData->Registro as $log) {
         </div>
 
         <h2 class="mt-4">Resultados da Pesquisa</h2>
-        <?php if (count($filteredLogs) > 0): ?>
+        <?php if (count($logsToDisplay) > 0): ?>
             <table class="table table-striped table-bordered mt-3">
                 <thead>
                     <tr>
@@ -128,7 +151,7 @@ foreach ($xmlData->Registro as $log) {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($filteredLogs as $log): ?>
+                    <?php foreach ($logsToDisplay as $log): ?>
                         <tr>
                             <td><?= htmlspecialchars($log['Matricula']) ?></td>
                             <td><?= htmlspecialchars($log['Computador']) ?></td>
@@ -141,6 +164,34 @@ foreach ($xmlData->Registro as $log) {
         <?php else: ?>
             <p class="no-results">Nenhum registro encontrado.</p>
         <?php endif; ?>
+
+        <!-- Paginação -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <!-- Botão Anterior -->
+                <li class="page-item <?= $currentPage == 1 ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?matricula=<?= htmlspecialchars($searchMatricula) ?>&computador=<?= htmlspecialchars($searchComputador) ?>&data=<?= htmlspecialchars($searchData) ?>&hora=<?= htmlspecialchars($searchHora) ?>&page=<?= $currentPage - 1 ?>" aria-label="Anterior">
+                        <span aria-hidden="true">&lt;</span>
+                    </a>
+                </li>
+
+                <!-- Números de páginas -->
+                <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                    <li class="page-item <?= ($i == $currentPage) ? 'active' : '' ?>">
+                        <a class="page-link" href="?matricula=<?= htmlspecialchars($searchMatricula) ?>&computador=<?= htmlspecialchars($searchComputador) ?>&data=<?= htmlspecialchars($searchData) ?>&hora=<?= htmlspecialchars($searchHora) ?>&page=<?= $i ?>">
+                            <?= $i ?>
+                        </a>
+                    </li>
+                <?php endfor; ?>
+
+                <!-- Botão Próximo -->
+                <li class="page-item <?= $currentPage == $totalPages ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?matricula=<?= htmlspecialchars($searchMatricula) ?>&computador=<?= htmlspecialchars($searchComputador) ?>&data=<?= htmlspecialchars($searchData) ?>&hora=<?= htmlspecialchars($searchHora) ?>&page=<?= $currentPage + 1 ?>" aria-label="Próximo">
+                        <span aria-hidden="true">&gt;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
     </div>
 
     <!-- Incluindo o JavaScript do Bootstrap -->
